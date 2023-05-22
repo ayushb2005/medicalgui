@@ -53,6 +53,7 @@ public class App extends Application {
         Button nextButton = new Button("Next");
         nextButton.setOnAction(event -> {
             // Make API POST request here
+            if(isValidInput()){
             try {
                 URL url = new URL("http://localhost:8080/api/medical/createPerson");
 
@@ -71,23 +72,16 @@ public class App extends Application {
     
             // Create the request body
 
-
+            String requestBody = "{\"name\": \"" + nameField.getText() + "\", " +
+            "\"lastName\": \"" + lastNameField.getText() + "\", " +
+            "\"age\": " + ageComboBox.getValue() + ", " +
+            "\"gender\": \"" + genderComboBox.getValue() + "\", " +
+            "\"sym\": [\"test\"]}";
     
             // Write the request body to the output stream
             DataOutputStream outputStream = new DataOutputStream(connection.getOutputStream());
-            if(nameField.getText()!="" &&  lastNameField.getText()!="" && ageComboBox.getValue()!=0 && genderComboBox.getValue()!=null ){
-                Alert a = new Alert(Alert.AlertType.ERROR);
-                a.setTitle("Error");
-                a.setContentText("Fill in all values");
-                a.showAndWait();
-            }else{
-                String requestBody = "{\"name\": \"" + nameField.getText() + "\", " +
-                "\"lastName\": \"" + lastNameField.getText() + "\", " +
-                "\"age\": " + ageComboBox.getValue() + ", " +
-                "\"gender\": \"" + genderComboBox.getValue() + "\", " +
-                "\"sym\": [\"test\"]}";
-                outputStream.writeBytes(requestBody);
-            }
+            outputStream.writeBytes(requestBody);
+            
             outputStream.flush();
             outputStream.close();
     
@@ -116,8 +110,13 @@ public class App extends Application {
                 // TODO: handle exception
                 e.printStackTrace();
             }
-
+        }
             
+        });
+        Button quitButton = new Button("Quit");
+        quitButton.setOnAction(event -> {
+            // Close the application
+            primaryStage.close();
         });
 
         // Create layout and add controls
@@ -130,11 +129,14 @@ public class App extends Application {
         gridPane.addRow(2, ageLabel, ageComboBox);
         gridPane.addRow(3, genderLabel, genderComboBox);
         gridPane.add(nextButton, 0, 4, 2, 1);
+        gridPane.add(quitButton, 0, 5, 2, 1);
 
         Scene scene = new Scene(gridPane, 300, 200);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
+
+    //for going to search
     private void createSuccessScene(Stage primaryStage) {
         Label searchLabel = new Label("Search:");
         TextField searchField = new TextField();
@@ -158,4 +160,39 @@ public class App extends Application {
         primaryStage.setScene(successScene);
         primaryStage.setTitle("Success Page");
     }
+    private boolean isValidInput() {
+        // Validate name field
+        if (nameField.getText().isEmpty()) {
+            showErrorAlert("Name is required.");
+            return false;
+        }
+
+        // Validate last name field
+        if (lastNameField.getText().isEmpty()) {
+            showErrorAlert("Last Name is required.");
+            return false;
+        }
+
+        // Validate age field
+        if (ageComboBox.getValue() == null || ageComboBox.getValue() == 0) {
+            showErrorAlert("Please select a valid age.");
+            return false;
+        }
+
+        return true;
+    }
+
+    private void showErrorAlert(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    //going to existing user
+    private void createSuccessSceneExistingUser(Stage primaryStage) {
+        
+    }
+
 }
