@@ -178,7 +178,10 @@ public class App extends Application {
             showErrorAlert("Please select a valid age.");
             return false;
         }
-
+        if(genderComboBox.getValue()==null){
+            showErrorAlert("Please select a valid gender.");
+            return false;
+        }
         return true;
     }
 
