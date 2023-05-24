@@ -1,5 +1,15 @@
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import java.net.http.HttpClient;
 import java.io.IOException;
 import java.net.URL;
@@ -14,6 +24,7 @@ import javafx.stage.Stage;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import javafx.scene.control.Alert.AlertType;
 
@@ -23,6 +34,8 @@ public class App extends Application {
     private TextField lastNameField;
     private ComboBox<Integer> ageComboBox;
     private ComboBox<String> genderComboBox;
+    private List<String> nameList;
+    Set<String> symSet = new HashSet<>();
 
     public static void main(String[] args) {
         launch(args);
@@ -104,7 +117,9 @@ public class App extends Application {
             // Disconnect the connection
             connection.disconnect();
             if (responseCode == 200) {
-                createSuccessScene(primaryStage);
+                //createSuccessScene(primaryStage);
+                nameList = extractNamesFromResponse();
+                showSecondScreen(primaryStage);
             }
             } catch (Exception e) {
                 // TODO: handle exception
@@ -131,7 +146,7 @@ public class App extends Application {
         gridPane.add(nextButton, 0, 4, 2, 1);
         gridPane.add(quitButton, 0, 5, 2, 1);
 
-        Scene scene = new Scene(gridPane, 300, 200);
+        Scene scene = new Scene(gridPane, 500, 500);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
@@ -149,7 +164,7 @@ public class App extends Application {
         });
 
         nextButton.setOnAction(event -> {
-            // Handle next button action
+            // Handle next button action    
         });
 
         VBox vbox = new VBox(10);
@@ -193,9 +208,148 @@ public class App extends Application {
         alert.showAndWait();
     }
 
+
+    private List<String> extractNamesFromResponse() {
+        List<String> names = new ArrayList<>();
+    
+        try {
+            URL url = new URL("http://localhost:8080/api/medical/sortASC");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+    
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+                reader.close();
+    
+                Gson gson = new Gson();
+                JsonArray jsonArray = gson.fromJson(response.toString(), JsonArray.class);
+                for (JsonElement element : jsonArray) {
+                    JsonObject jsonObject = element.getAsJsonObject();
+                    String name = jsonObject.get("name").getAsString();
+                    names.add(name);
+                }
+            } else {
+                System.out.println("API request failed with response code: " + responseCode);
+            }
+    
+            connection.disconnect();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    
+        return names;
+    }
+    private void showSecondScreen(Stage primaryStage) {
+        primaryStage.setTitle("Name List");
+
+        GridPane gridPane = new GridPane();
+        gridPane.setPadding(new Insets(10));
+        gridPane.setHgap(10);
+        gridPane.setVgap(10);
+
+        // Display names with Add buttons
+        for (int i = 0; i < nameList.size(); i++) {
+            Label nameLabel = new Label(nameList.get(i));
+            Button addButton = new Button("Add");
+            addButton.setOnAction(event -> {
+                // Add the name to the ArrayList or perform any desired action
+                symSet.add(nameLabel.getText());
+                String name = nameLabel.getText();
+                // Add name to your ArrayList or perform any desired action
+                System.out.println("Added name: " + name);
+                System.out.println(nameField.getText());
+            });
+            gridPane.addRow(i, nameLabel, addButton);
+        }
+
+        
+        Button sendSymptoms = new Button("Next");
+        sendSymptoms.setOnAction(event->{
+            if(!symSet.isEmpty()){
+
+            
+            JsonObject requestBody = new JsonObject();
+            requestBody.addProperty("name", nameField.getText());
+            requestBody.addProperty("lastName", lastNameField.getText());
+            requestBody.addProperty("age", ageComboBox.getValue());
+        
+            JsonArray symptomsArray = new JsonArray();
+            for (String symptom : symSet) {
+                symptomsArray.add(symptom);
+            }
+            requestBody.add("sym", symptomsArray);
+        
+            try {
+                URL url = new URL("http://localhost:8080/api/medical/addSymptomById");
+        
+                // Create HttpURLConnection object
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        
+                // Set the HTTP request method to POST
+                connection.setRequestMethod("PUT");
+        
+                // Enable input and output streams
+                connection.setDoInput(true);
+                connection.setDoOutput(true);
+        
+                // Set request headers
+                connection.setRequestProperty("Content-Type", "application/json");
+        
+                // Write the request body to the output stream
+                OutputStream outputStream = connection.getOutputStream();
+                outputStream.write(requestBody.toString().getBytes());
+                outputStream.flush();
+                outputStream.close();
+        
+                // Get the response code
+                int responseCode = connection.getResponseCode();
+                System.out.println("Response Code: " + responseCode);
+        
+                // Read the response
+                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String line;
+                StringBuilder response = new StringBuilder();
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+                reader.close();
+        
+                // Print the response
+                System.out.println("Response: " + response.toString());
+        
+                // Disconnect the connection
+                connection.disconnect();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            }else{
+                Alert alert = new Alert(AlertType.INFORMATION);
+                alert.setTitle("Symptom Error");
+                alert.setHeaderText(null);
+                alert.setContentText("There are no symptoms that were added");
+                alert.showAndWait();
+            }
+            
+        });
+        gridPane.addRow(nameList.size(), sendSymptoms);
+
+        ScrollPane scrollPane = new ScrollPane(gridPane);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+
+        Scene scene = new Scene(scrollPane, 500, 500);
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
     //going to existing user
     private void createSuccessSceneExistingUser(Stage primaryStage) {
-        
+
     }
 
 }
