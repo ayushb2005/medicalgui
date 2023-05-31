@@ -386,7 +386,7 @@ public class App
         gridPane.setVgap(10);
 
         // Display names with Add buttons
-        for (int i = 0; i < nameList.size(); i++)
+        for (int i = 0; i < nameList.size()-1; i++)
         {
             Label nameLabel = new Label(nameList.get(i));
             Button addButton = new Button("Add");
@@ -397,6 +397,10 @@ public class App
                 // Add name to your ArrayList or perform any desired action
                 System.out.println("Added name: " + name);
                 System.out.println(nameField.getText());
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Added symptom");
+                alert.setContentText( nameLabel.getText()+" is added");
+                alert.showAndWait();
             });
             gridPane.addRow(i, nameLabel, addButton);
         }
@@ -465,10 +469,7 @@ public class App
 
                     // Disconnect the connection
                     connection.disconnect();
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Added symptom");
-                    alert.setContentText(symptomsArray.get(0).toString()+" is added");
-                    alert.showAndWait();
+
                     showThirdScreen(primaryStage);
                 }
                 catch (Exception e)
