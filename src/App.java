@@ -28,7 +28,11 @@ import java.net.HttpURLConnection;
 import com.google.gson.GsonBuilder; 
 
 import javafx.scene.control.Alert.AlertType;
-
+/**
+ * This is the main Java FX class with all the code for the MediSymptom GUI
+ * @author Ayush Bhanushali, Ryan Ma, Andrew Xin
+ * @version 5/30/23
+ */
 public class App
     extends Application
 {
@@ -46,13 +50,17 @@ public class App
         launch(args);
     }
 
-
+    
     @Override
+    /**
+     * This method overrides Stage class and uses the start method from it to have a GUI screen
+     * This is the first screen where the registration or logging in is done
+     * @author Ryan Ma
+     */
     public void start(Stage primaryStage)
     {
         primaryStage.setTitle("User Registration");
 
-        // Create UI controls
         Label nameLabel = new Label("Name:");
         nameField = new TextField();
 
@@ -66,34 +74,27 @@ public class App
         genderComboBox = new ComboBox<>(FXCollections.observableArrayList("Male", "Female"));                                                                                                                                                                           
         Button nextButton = new Button("Next");
         nextButton.setOnAction(event -> {
-            // Make API POST request here
             if (isValidInput())
             {
                 try
                 {
                     URL url = new URL("http://localhost:8080/api/medical/createPerson");
 
-                    // Create HttpURLConnection object
                     HttpURLConnection connection = (HttpURLConnection)url.openConnection();
 
-                    // Set the HTTP request method to POST
                     connection.setRequestMethod("POST");
 
-                    // Enable input and output streams
                     connection.setDoInput(true);
                     connection.setDoOutput(true);
 
-                    // Set request headers
                     connection.setRequestProperty("Content-Type", "application/json");
 
-                    // Create the request body
 
                     String requestBody = "{\"name\": \"" + nameField.getText() + "\", "
                         + "\"lastName\": \"" + lastNameField.getText() + "\", " + "\"age\": "
                         + ageComboBox.getValue() + ", " + "\"gender\": \""
                         + genderComboBox.getValue() + "\", " + "\"sym\": [\"test\"]}";
 
-                    // Write the request body to the output stream
                     DataOutputStream outputStream =
                         new DataOutputStream(connection.getOutputStream());
                     outputStream.writeBytes(requestBody);
@@ -101,11 +102,9 @@ public class App
                     outputStream.flush();
                     outputStream.close();
 
-                    // Get the response code
                     int responseCode = connection.getResponseCode();
                     System.out.println("Response Code: " + responseCode);
 
-                    // Read the response
                     BufferedReader reader =
                         new BufferedReader(new InputStreamReader(connection.getInputStream()));
                     String line;
@@ -116,14 +115,11 @@ public class App
                     }
                     reader.close();
 
-                    // Print the response
                     System.out.println("Response: " + response.toString());
 
-                    // Disconnect the connection
                     connection.disconnect();
                     if (responseCode == 200)
                     {
-                        // createSuccessScene(primaryStage);
                         nameList = extractNamesFromResponse();
                         signIn=false;
                         showSecondScreen(primaryStage);
@@ -162,11 +158,9 @@ public class App
                     HttpURLConnection connection = (HttpURLConnection)url.openConnection();
                     connection.setRequestMethod("POST");
 
-                    // Enable input and output streams
                     connection.setDoInput(true);
                     connection.setDoOutput(true);
 
-                    // Set request headers
                     connection.setRequestProperty("Content-Type", "application/json");
                     OutputStream outputStream = connection.getOutputStream();
                     outputStream.write(requestBody.toString().getBytes());
@@ -185,7 +179,6 @@ public class App
                     }
                     reader.close();
 
-                    // Print the response
                     System.out.println("Response: " + response.toString());
                     int check = Integer.parseInt( response.toString());
                     if(check == 200){
@@ -213,7 +206,6 @@ public class App
 
             Button quitButton = new Button("Quit");
             quitButton.setOnAction(e -> {
-                // Display a confirmation dialog before quitting
                 Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
                 confirmAlert.setTitle("Quit");
                 confirmAlert.setHeaderText("Quit the program");
@@ -235,7 +227,6 @@ public class App
         });
             Button quitButton = new Button("Quit");
             quitButton.setOnAction(e -> {
-                // Display a confirmation dialog before quitting
                 Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
                 confirmAlert.setTitle("Quit");
                 confirmAlert.setHeaderText("Quit the program");
@@ -245,7 +236,6 @@ public class App
                         .filter(response -> response == ButtonType.OK)
                         .ifPresent(response -> Platform.exit());
             });
-        // Create layout and add controls
         GridPane gridPane = new GridPane();
         gridPane.setPadding(new Insets(10));
         gridPane.setHgap(10);
@@ -262,23 +252,19 @@ public class App
         primaryStage.setScene(scene);
         primaryStage.show();
     }
+    //This method makes sure that the fields when registering in are not left blank 
     private boolean isValidInput()
     {
-        // Validate name field
         if (nameField.getText().isEmpty())
         {
             showErrorAlert("Name is required.");
             return false;
         }
-
-        // Validate last name field
         if (lastNameField.getText().isEmpty())
         {
             showErrorAlert("Last Name is required.");
             return false;
         }
-
-        // Validate age field
         if (ageComboBox.getValue() == null || ageComboBox.getValue() == 0)
         {
             showErrorAlert("Please select a valid age.");
@@ -291,24 +277,19 @@ public class App
         }
         return true;
     }
-
+    //This method makes sure for users that are logging in are not left blank
     private boolean isValidInputExisting()
     {
-        // Validate name field
         if (nameField.getText().isEmpty())
         {
             showErrorAlert("Name is required.");
             return false;
         }
-
-        // Validate last name field
         if (lastNameField.getText().isEmpty())
         {
             showErrorAlert("Last Name is required.");
             return false;
         }
-
-        // Validate age field
         if (ageComboBox.getValue() == null || ageComboBox.getValue() == 0)
         {
             showErrorAlert("Please select a valid age.");
@@ -317,7 +298,7 @@ public class App
         return true;
     }
 
-
+    //Shows alert when fields are not filled in
     private void showErrorAlert(String message)
     {
         Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -327,7 +308,7 @@ public class App
         alert.showAndWait();
     }
 
-
+    //This method will make an api call so that it can have all the solutions in a list
     private List<String> extractNamesFromResponse()
     {
         List<String> names = new ArrayList<>();
@@ -375,7 +356,10 @@ public class App
         return names;
     }
 
-
+    /**
+     * This method goes to the second screen where the user can add symptoms to their own set
+     * @author Andrew Xin
+     */
     private void showSecondScreen(Stage primaryStage)
     {
         primaryStage.setTitle("Name List");
@@ -385,16 +369,13 @@ public class App
         gridPane.setHgap(10);
         gridPane.setVgap(10);
 
-        // Display names with Add buttons
         for (int i = 0; i < nameList.size()-1; i++)
         {
             Label nameLabel = new Label(nameList.get(i));
             Button addButton = new Button("Add");
             addButton.setOnAction(event -> {
-                // Add the name to the ArrayList or perform any desired action
                 symSet.add(nameLabel.getText());
                 String name = nameLabel.getText();
-                // Add name to your ArrayList or perform any desired action
                 System.out.println("Added name: " + name);
                 System.out.println(nameField.getText());
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -406,7 +387,6 @@ public class App
         }
         Button goToPreviousButton = new Button("Back");
         goToPreviousButton.setOnAction(event -> {
-            // Switch to the previous scene
             start(primaryStage);
         });
         Button sendSymptoms = new Button("Next");
@@ -430,30 +410,21 @@ public class App
                 {
                     URL url = new URL("http://localhost:8080/api/medical/addSymptomById");
 
-                    // Create HttpURLConnection object
                     HttpURLConnection connection = (HttpURLConnection)url.openConnection();
 
-                    // Set the HTTP request method to POST
                     connection.setRequestMethod("PUT");
                     
-                    // Enable input and output streams
                     connection.setDoInput(true);
                     connection.setDoOutput(true);
 
-                    // Set request headers
                     connection.setRequestProperty("Content-Type", "application/json");
 
-                    // Write the request body to the output stream
                     OutputStream outputStream = connection.getOutputStream();
                     outputStream.write(requestBody.toString().getBytes());
                     outputStream.flush();
                     outputStream.close();
-
-                    // Get the response code
                     int responseCode = connection.getResponseCode();
                     System.out.println("Response Code: " + responseCode);
-
-                    // Read the response
                     BufferedReader reader =
                         new BufferedReader(new InputStreamReader(connection.getInputStream()));
                     String line;
@@ -463,11 +434,7 @@ public class App
                         response.append(line);
                     }
                     reader.close();
-
-                    // Print the response
                     System.out.println("Response: " + response.toString());
-
-                    // Disconnect the connection
                     connection.disconnect();
 
                     showThirdScreen(primaryStage);
@@ -503,7 +470,10 @@ public class App
         primaryStage.show();
     }
 
-
+    /**
+     * This method will show the last screen with the delete buttons for getting rid of symptoms
+     * @author Ayush Bhanushali
+     */
     private void showThirdScreen(Stage primaryStage)
     {
         primaryStage.setTitle("Display/Delete");
@@ -542,27 +512,20 @@ public class App
                     response.append(line);
                 }
                 reader.close();
-        
-                // Parse the JSON response into a HashMap
                 Gson gson = new Gson();
                 java.lang.reflect.Type type = new TypeToken<HashMap<String, MedicalSolutions>>(){}.getType();
                 HashMap<String, MedicalSolutions> responseData = gson.fromJson(response.toString(), type);
-                
                 
                 for (Map.Entry<String, MedicalSolutions> entry : responseData.entrySet()) {
                     if(entry.getKey().equals("test")){
 
                     }else{
-                        String key = entry.getKey();
                         Object value = entry.getValue();
-                        // MedicalSolutions m = new MedicalSolutions(key, line, key);
                         String format  = "Symptom: "+entry.getValue().getName()+"\n"+"Description: "+ entry.getValue().getDescription()+"\n"+"Solution: "+entry.getValue().getTreatment();
                         Label valueLabel = new Label(format);
                         
                         Button deleteButton = new Button("Delete");
                         deleteButton.setOnAction(event -> {
-                            // Handle delete action for this value
-                            // ...
                             try {
                                 Set<String> stringsToRemove = new HashSet<>();
                                 stringsToRemove.add(entry.getKey());
@@ -614,8 +577,6 @@ public class App
                     }
 
                 }
-
-                // Use the HashMap as needed
                 System.out.println(responseData);
             }
         } catch (Exception e) {
@@ -636,10 +597,8 @@ public class App
         });
         Button goToPreviousButton = new Button("Back");
         goToPreviousButton.setOnAction(event -> {
-            // Switch to the previous scene
             showSecondScreen(primaryStage);
         });
-        // Add the quit button to the grid pane
         gridPane.add(goToPreviousButton,0,row);
         gridPane.add(quitButton, 0, row+1);
 
