@@ -55,6 +55,7 @@ public class App
     /**
      * This method overrides Stage class and uses the start method from it to have a GUI screen
      * This is the first screen where the registration or logging in is done
+     * @param primaryStage is the window that will open once the application is ran
      * @author Ryan Ma
      */
     public void start(Stage primaryStage)
@@ -564,8 +565,7 @@ public class App
 
                                 
                             } catch (Exception e) {
-                                // Handle exceptions
-                                // ...
+                                System.out.println("Error");
                             }
                             
                             System.out.println("Delete button clicked for value: " + value);
@@ -585,7 +585,6 @@ public class App
 
         Button quitButton = new Button("Quit");
         quitButton.setOnAction(event -> {
-            // Display a confirmation dialog before quitting
             Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
             confirmAlert.setTitle("Quit");
             confirmAlert.setHeaderText("Quit the program");
